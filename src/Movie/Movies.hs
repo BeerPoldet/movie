@@ -1,13 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Core.Handler.Movies where
+module Movie.Movies where
 
 import Data.Aeson (ToJSON, defaultOptions, fieldLabelModifier, genericToJSON, toJSON)
 import Data.Char (toLower)
 import Data.Time.Calendar (Day, fromGregorian)
-import qualified Effect.Database as Database
-import qualified Effect.Print as Print
+import qualified Movie.Print as Print
 import Servant.API (FromHttpApiData, Get, JSON, QueryParam, parseQueryParam, (:>))
 
 type MovieAPI = "movies" :> QueryParam "sortBy" SortBy :> Get '[JSON] [Movie]
@@ -34,8 +33,8 @@ instance ToJSON Movie where
   toJSON =
     genericToJSON
       defaultOptions
-        { fieldLabelModifier = map toLower . drop (length ("movie" :: String))
-        }
+        -- { fieldLabelModifier = map toLower . drop (length ("movie" :: String))
+        -- }
 
 -- movies :: [Movie]
 -- movies =
@@ -43,10 +42,13 @@ instance ToJSON Movie where
 --   , Movie {title = "Red Panda", releasedDate = fromGregorian 2010 12 22, rating = 1}
 --   ]
 
-moviesHandler :: (Database.MonadMovie m, Print.MonadPrint m) => Maybe SortBy -> m [Movie]
+class Monad m => MonadMovie m where
+  listMovies :: m [(Int32, Text, Day, Int32)]
+
+moviesHandler :: (MonadMovie m, Print.MonadPrint m) => Maybe SortBy -> m [Movie]
 moviesHandler sortBy =
   Print.print sortBy
-    >> Database.listMovies
+    >> listMovies
     >>= (pure . fmap movieByTable)
   where
     movieByTable :: (Int32, Text, Day, Int32) -> Movie

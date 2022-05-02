@@ -1,6 +1,6 @@
-module App.Env where
+module Movie.App.Env where
 
-import qualified App.Config as Config
+import qualified Movie.App.Config as Config
 import Database.PostgreSQL.Typed (PGConnection)
 
 data Env = Env

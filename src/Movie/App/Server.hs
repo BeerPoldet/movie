@@ -1,11 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module App.Server where
+module Movie.App.Server where
 
-import qualified App.Config as Config
-import qualified App.Env as Env
-import qualified App.Monad as Monad
-import qualified Core.Handler.Movies as Movies
+import qualified Movie.App.Config as Config
+import qualified Movie.App.Env as Env
+import qualified Movie.App.Monad as Monad
+import qualified Movie.Movies as Movies
 import qualified Network.Wai.Handler.Warp as Warp
 import Servant.Server (
   Application,

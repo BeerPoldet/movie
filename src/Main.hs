@@ -1,6 +1,6 @@
 module Main where
 
-import App qualified as App
+import Movie.App qualified as App
 import Main.Utf8 qualified as Utf8
 
 {- |

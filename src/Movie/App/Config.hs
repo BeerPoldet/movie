@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module App.Config where
+module Movie.App.Config where
 
 import qualified Conferer
 
@@ -14,7 +14,10 @@ data Config = Config
 instance Conferer.FromConfig Config
 
 data PostgresConfig = PostgresConfig
-  { postgresConfigUsername :: ByteString
+  { postgresConfigHost :: ByteString
+  , postgresConfigPort :: Int
+  , postgresConfigDatabase :: ByteString
+  , postgresConfigUsername :: ByteString
   , postgresConfigPassword :: ByteString
   }
   deriving stock (Show, Eq, Generic)

@@ -35,6 +35,8 @@ executable movie
     , filepath
     , mtl
     , optics-core
+    , postgresql-migration
+    , postgresql-simple
     , postgresql-typed
     , pretty-simple
     , profunctors
