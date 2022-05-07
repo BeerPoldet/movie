@@ -1,7 +1,6 @@
 module Main where
 
-import Movie.App qualified as App
-import Main.Utf8 qualified as Utf8
+import qualified Movie.App as App
 
 {- |
  Main entry point.

@@ -2,30 +2,19 @@ cabal-version:      2.4
 name:               movie
 version:            0.1.0.0
 license:            MIT
-copyright:          2022 Sridhar Ratnakumar
-maintainer:         srid@srid.ca
-author:             Sridhar Ratnakumar
-category:           Web
-
--- TODO: Before hackage release.
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- A URL where users can report bugs.
--- bug-reports:
-
+copyright:          2022 Poldet Assanangkornchai
+maintainer:         poldet.ai@gmail.com
+author:             Poldet Assanangkornchai
+category:           Movie Backend
 extra-source-files:
   LICENSE
   README.md
 
-executable movie
+common base
   build-depends:
     , aeson
     , async
-    , base          >=4.13.0.0 && <=4.18.0.0
+    , base                  >=4.13.0.0 && <=4.18.0.0
     , bytestring
     , conferer
     , conferer-warp
@@ -100,6 +89,35 @@ executable movie
     TypeOperators
     ViewPatterns
 
-  main-is:            Main.hs
-  hs-source-dirs:     src
   default-language:   Haskell2010
+
+library
+  import:          base
+  hs-source-dirs:  src
+  exposed-modules:
+    Movie.App
+    Movie.App.Config
+    Movie.App.Database
+    Movie.App.Env
+    Movie.App.Monad
+    Movie.App.Server
+    Movie.Movies
+    Movie.Print
+
+executable movie-exe
+  import:         base
+  main-is:        Main.hs
+  hs-source-dirs: app
+  build-depends:  movie
+
+test-suite movie-test
+  import:             base
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  main-is:            Spec.hs
+  build-depends:
+    , hspec
+    , hspec-discover
+    , movie
+
+  build-tool-depends: hspec-discover:hspec-discover
