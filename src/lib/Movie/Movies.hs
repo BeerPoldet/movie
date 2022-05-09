@@ -13,14 +13,14 @@ import Data.Aeson (
   parseJSON,
   toJSON,
  )
-import Data.Char (toLower)
-import Data.Time.Calendar (Day, fromGregorian)
+import Data.Time.Calendar (Day)
 import Movie.Print qualified as Print
 import Servant.API (
   FromHttpApiData,
   Get,
   JSON,
   Post,
+  Put,
   QueryParam,
   ReqBody,
   parseQueryParam,
@@ -32,6 +32,7 @@ type MovieAPI =
   "movies"
     :> ( QueryParam "sortBy" SortBy :> Get '[JSON] [Movie]
           :<|> ReqBody '[JSON] CreateMovie :> Post '[JSON] ()
+          :<|> ReqBody '[JSON] UpdateMovie :> Put '[JSON] ()
        )
 
 data SortBy = Rating | ReleasedDate
@@ -45,20 +46,28 @@ instance FromHttpApiData SortBy where
       _ -> Left $ "Failed: " <> text
 
 data Movie = Movie
-  { id :: Int32
-  , title :: Text
-  , releasedDate :: Day
-  , rating :: Int32
+  { movieId :: Int32
+  , movieTitle :: Text
+  , movieReleasedDate :: Day
+  , movieRating :: Int32
   }
   deriving stock (Show, Eq, Generic)
+
+jsonFieldByMovieRecord :: String -> String
+jsonFieldByMovieRecord s =
+  case s of
+    "movieId" -> "id"
+    "movieTitle" -> "title"
+    "movieReleasedDate" -> "released_date"
+    "movieRating" -> "rating"
+    _ -> s
 
 instance ToJSON Movie where
   toJSON =
     genericToJSON
       defaultOptions
-
--- { fieldLabelModifier = map toLower . drop (length ("movie" :: String))
--- }
+        { fieldLabelModifier = jsonFieldByMovieRecord
+        }
 
 -- movies :: [Movie]
 -- movies =
@@ -76,8 +85,8 @@ listMoviesHandler sortBy =
     <&> fmap movieByTable
   where
     movieByTable :: (Int32, Text, Day, Int32) -> Movie
-    movieByTable (_id, title, releasedDate, rating) =
-      Movie _id title releasedDate rating
+    movieByTable (movieId, movieTitle, movieReleasedDate, movieRating) =
+      Movie movieId movieTitle movieReleasedDate movieRating
 
 data CreateMovie = CreateMovie
   { createMovieTitle :: Text
@@ -86,18 +95,27 @@ data CreateMovie = CreateMovie
   }
   deriving stock (Show, Eq, Generic)
 
+jsonFieldByCreateMovieRecord :: String -> String
+jsonFieldByCreateMovieRecord s =
+  case s of
+    "createMovieId" -> "id"
+    "createMovieTitle" -> "title"
+    "createMovieReleasedDate" -> "released_date"
+    "createMovieRating" -> "rating"
+    _ -> s
+
 instance ToJSON CreateMovie where
   toJSON =
     genericToJSON
       defaultOptions
-        { fieldLabelModifier = map toLower . drop (length ("createMovie" :: String))
+        { fieldLabelModifier = jsonFieldByCreateMovieRecord
         }
 
 instance FromJSON CreateMovie where
   parseJSON =
     genericParseJSON
       defaultOptions
-        { fieldLabelModifier = map toLower . drop (length ("createMovie" :: String))
+        { fieldLabelModifier = jsonFieldByCreateMovieRecord
         }
 
 class Monad m => MonadCreateMovie m where
@@ -107,3 +125,42 @@ createMovieHandler :: (MonadCreateMovie m, Print.MonadPrint m) => CreateMovie ->
 createMovieHandler m =
   Print.print m
     >> createMovie m
+
+data UpdateMovie = UpdateMovie
+  { updateMovieId :: Int32
+  , updateMovieTitle :: Maybe Text
+  , updateMovieReleasedDate :: Maybe Day
+  , updateMovieRating :: Maybe Int32
+  }
+  deriving stock (Show, Eq, Generic)
+
+jsonFieldByUpdateMovieRecord :: String -> String
+jsonFieldByUpdateMovieRecord s =
+  case s of
+    "updateMovieId" -> "id"
+    "updateMovieTitle" -> "title"
+    "updateMovieReleasedDate" -> "released_date"
+    "updateMovieRating" -> "rating"
+    _ -> s
+
+instance ToJSON UpdateMovie where
+  toJSON =
+    genericToJSON
+      defaultOptions
+        { fieldLabelModifier = jsonFieldByUpdateMovieRecord
+        }
+
+instance FromJSON UpdateMovie where
+  parseJSON =
+    genericParseJSON
+      defaultOptions
+        { fieldLabelModifier = jsonFieldByUpdateMovieRecord
+        }
+
+class Monad m => MonadUpdateMovie m where
+  updateMovie :: UpdateMovie -> m ()
+
+updateMovieHandler :: (MonadUpdateMovie m, Print.MonadPrint m) => UpdateMovie -> m ()
+updateMovieHandler m = do
+  Print.print m
+  updateMovie m

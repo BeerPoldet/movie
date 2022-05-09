@@ -14,7 +14,6 @@ import Database.PostgreSQL.Simple as PSQLS (
   connectPort,
   connectUser,
   defaultConnectInfo,
-  withTransaction,
  )
 import Database.PostgreSQL.Simple.Migration as Migration (
   MigrationCommand (MigrationDirectory, MigrationInitialization),
@@ -24,13 +23,6 @@ import Database.PostgreSQL.Simple.Migration as Migration (
  )
 import Database.PostgreSQL.Typed
 import Movie.App.Config (PostgresConfig (..))
-
-useTPGDatabase
-  defaultPGDatabase
-      { pgDBUser = "postgres"
-      , pgDBPass = "mysecretpassword"
-      , pgDBName = "movie"
-      }
 
 connect :: PostgresConfig -> IO PGConnection
 connect PostgresConfig {..} =

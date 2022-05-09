@@ -3,7 +3,6 @@
 
 module Movie.App.Monad where
 
-import Data.Time.Calendar (fromGregorian)
 import Database.PostgreSQL.Typed (PGConnection, pgQuery, pgSQL)
 import Movie.App.Config qualified as Config
 import Movie.App.Env (Env (..))
@@ -23,35 +22,66 @@ runAppM env appM = runReaderT (unAppM appM) env
 
 config :: (MonadReader Env.Env m) => m Config.Config
 -- config = ask >>= return . envConfig
-config = fmap ask envConfig
+config = fmap envConfig ask
 
 dbConnection :: (MonadReader Env.Env m) => m PGConnection
-dbConnection = ask >>= return . envDB
+dbConnection = fmap envDB ask
 
 --
 -- Effects
 --
 
 --
--- MonadMovie
+-- MonadListMovie
 --
 
-instance MonadMovie (AppM IO) where
+instance MonadListMovie (AppM IO) where
   listMovies = do
     c <- dbConnection
     -- lift $ return [(1, "hello", fromGregorian 2010 12 22, 3)]
-    lift $ pgQuery c [pgSQL|SELECT id, title, released_date, rating FROM movies|]
-
-instance MonadCreateMovie (AppM IO) where
-  createMovie movie@CreateMovie {..} = do
-    c <- dbConnection
     lift $
       pgQuery
         c
         [pgSQL|
-          INSERT INTO movies (title, released_date, rating) 
-          VALUES (${createMovieTitle}, ${createMovieReleasedDate}, ${createMovieRating})
+          SELECT 
+            id,
+            title,
+            released_date,
+            rating 
+          FROM movies
         |]
+
+instance MonadCreateMovie (AppM IO) where
+  createMovie CreateMovie {..} = do
+    c <- dbConnection
+    _ <-
+      lift $
+        pgQuery
+          c
+          [pgSQL|
+            INSERT INTO movies (title, released_date, rating) 
+            VALUES (
+              ${createMovieTitle},
+              ${createMovieReleasedDate},
+              ${createMovieRating}
+            )
+        |]
+    return ()
+
+instance MonadUpdateMovie (AppM IO) where
+  updateMovie UpdateMovie {..} = do
+    c <- dbConnection
+    _ <-
+      lift $
+        pgQuery
+          c
+          [pgSQL|
+            UPDATE movies
+            SET title = COALESCE(${updateMovieTitle}, title),
+                released_date = COALESCE(${updateMovieReleasedDate}, released_date),
+                rating = COALESCE(${updateMovieRating}, rating)
+            WHERE id=${updateMovieId}
+          |]
     return ()
 
 --

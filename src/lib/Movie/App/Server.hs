@@ -11,11 +11,9 @@ import Servant ((:<|>) (..))
 import Servant.Server (
   Application,
   Context (EmptyContext),
+  Handler,
   Server,
-  hoistServer,
-  -- serve,
   serveWithContextT,
-  Handler
  )
 
 type API = Movies.MovieAPI
@@ -33,8 +31,10 @@ run env@Env.Env {..} =
     api = Proxy @API
 
     server :: Server Movies.MovieAPI
-    server = appMToHandler . Movies.listMoviesHandler 
-            :<|> appMToHandler . Movies.createMovieHandler
+    server =
+      appMToHandler . Movies.listMoviesHandler
+        :<|> appMToHandler . Movies.createMovieHandler
+        :<|> appMToHandler . Movies.updateMovieHandler
 
     appMToHandler :: Monad.AppM IO a -> Handler a
     appMToHandler appM = liftIO $ Monad.runAppM env appM

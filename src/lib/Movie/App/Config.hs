@@ -3,7 +3,7 @@
 
 module Movie.App.Config where
 
-import qualified Conferer
+import Conferer qualified
 
 data Config = Config
   { configPostgres :: PostgresConfig
