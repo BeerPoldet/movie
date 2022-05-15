@@ -3,22 +3,29 @@
 
 module Movie.App.Monad where
 
+import Control.Monad.Error.Class (MonadError)
 import Database.PostgreSQL.Typed (PGConnection, pgQuery, pgSQL)
 import Movie.App.Config qualified as Config
 import Movie.App.Env (Env (..))
 import Movie.App.Env qualified as Env
 import Movie.Movies
 import Movie.Print
+import Servant.Server (ServerError)
 import Text.Pretty.Simple (pPrint)
 import Prelude hiding (print)
 
 newtype AppM m a = AppM
-  { unAppM :: ReaderT Env m a
+  { unAppM :: ReaderT Env (ExceptT AppError m) a
   }
-  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans, MonadReader Env)
+  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadReader Env, MonadError AppError)
 
-runAppM :: Env -> AppM IO a -> IO a
-runAppM env appM = runReaderT (unAppM appM) env
+instance MonadTrans AppM where
+  lift = AppM . lift . lift
+
+newtype AppError = ServerError ServerError
+
+runAppM :: Env -> AppM IO a -> IO (Either AppError a)
+runAppM env appM = runExceptT $ runReaderT (unAppM appM) env
 
 config :: (MonadReader Env.Env m) => m Config.Config
 -- config = ask >>= return . envConfig

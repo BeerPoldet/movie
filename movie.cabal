@@ -31,6 +31,8 @@ common base
     , profunctors
     , relude
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , shower
     , text
